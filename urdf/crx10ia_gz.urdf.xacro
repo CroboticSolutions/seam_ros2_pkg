@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://wiki.ros.org/xacro" name="crx10ia">
+
+  <xacro:arg name="simulation_controllers" default="" />
+
+  <xacro:include filename="$(find fanuc_crx_description)/urdf/crx10ia_urdf_macro.xacro"/>
+  <xacro:include filename="$(find fanuc_gazebo)/urdf/crx_gz_ros2_control_macro.xacro"/>
+
+  <link name="world"/>
+  <link name="end_effector"/>
+
+  <xacro:crx10ia parent="world" child="end_effector" prefix="">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </xacro:crx10ia>
+
+  <xacro:crx_gz_control name="crx10ia" prefix=""/>
+
+  <gazebo reference="base_link">
+    <selfCollide>false</selfCollide>
+  </gazebo>
+  <gazebo reference="J1_link">
+    <selfCollide>false</selfCollide>
+  </gazebo>
+  <gazebo reference="J2_link">
+    <selfCollide>false</selfCollide>
+  </gazebo>
+  <gazebo reference="J3_link">
+    <selfCollide>false</selfCollide>
+  </gazebo>
+  <gazebo reference="J4_link">
+    <selfCollide>false</selfCollide>
+  </gazebo>
+  <gazebo reference="J5_link">
+    <selfCollide>false</selfCollide>
+  </gazebo>
+  <gazebo reference="J6_link">
+    <selfCollide>false</selfCollide>
+  </gazebo>
+
+  <gazebo>
+    <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+      <parameters>$(arg simulation_controllers)</parameters>
+    </plugin>
+  </gazebo>
+
+</robot>
