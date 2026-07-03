@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://wiki.ros.org/xacro">
+  <xacro:macro name="crx_welding_torch" params="parent prefix:=''">
+    <material name="${prefix}torch_metal">
+      <color rgba="0.42 0.44 0.46 1.0"/>
+    </material>
+
+    <link name="${prefix}welding_torch">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh
+            filename="package://fanuc_gazebo/meshes/welding_torches/user_torch/Torch.stl"
+            scale="0.001 0.001 0.001"
+          />
+        </geometry>
+        <material name="${prefix}torch_metal"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh
+            filename="package://fanuc_gazebo/meshes/welding_torches/user_torch/Torch.stl"
+            scale="0.001 0.001 0.001"
+          />
+        </geometry>
+      </collision>
+      <inertial>
+        <mass value="1.50"/>
+        <origin xyz="0.180 0.020 0.004"/>
+        <inertia ixx="0.0030" ixy="0" ixz="0" iyy="0.0120" iyz="0" izz="0.0120"/>
+      </inertial>
+    </link>
+
+    <joint name="${prefix}welding_torch_joint" type="fixed">
+      <origin xyz="0 0 0" rpy="1.57079632679 0 0"/>
+      <parent link="${parent}"/>
+      <child link="${prefix}welding_torch"/>
+    </joint>
+
+    <link name="${prefix}welding_tcp"/>
+    <joint name="${prefix}welding_tcp_joint" type="fixed">
+      <origin xyz="0.40642358 -0.01193078 0" rpy="0 0 0"/>
+      <parent link="${prefix}welding_torch"/>
+      <child link="${prefix}welding_tcp"/>
+    </joint>
+
+    <link name="${prefix}welding_eef"/>
+    <joint name="${prefix}welding_eef_joint" type="fixed">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <parent link="${prefix}welding_tcp"/>
+      <child link="${prefix}welding_eef"/>
+    </joint>
+  </xacro:macro>
+</robot>

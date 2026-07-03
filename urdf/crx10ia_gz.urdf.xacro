@@ -5,6 +5,8 @@
 
   <xacro:include filename="$(find fanuc_crx_description)/urdf/crx10ia_urdf_macro.xacro"/>
   <xacro:include filename="$(find fanuc_gazebo)/urdf/crx_gz_ros2_control_macro.xacro"/>
+  <xacro:include filename="$(find fanuc_gazebo)/urdf/welding_torch.xacro"/>
+  <xacro:include filename="$(find fanuc_gazebo)/urdf/include/fanuc_oak_d_pro_w_macros.xacro"/>
 
   <link name="world"/>
   <link name="end_effector"/>
@@ -12,6 +14,10 @@
   <xacro:crx10ia parent="world" child="end_effector" prefix="">
     <origin xyz="0 0 0" rpy="0 0 0"/>
   </xacro:crx10ia>
+
+  <xacro:crx_welding_torch parent="end_effector" prefix=""/>
+
+  <xacro:fanuc_mount_oak_d_pro_w parent_link="J6_link" simulation="true" oak_gazebo_rgbd_sensor="true"/>
 
   <xacro:crx_gz_control name="crx10ia" prefix=""/>
 

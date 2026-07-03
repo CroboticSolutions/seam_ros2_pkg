@@ -32,7 +32,10 @@ def _configure(context):
 
     pkg_gazebo = get_package_share_directory("fanuc_gazebo")
     pkg_crx_desc = get_package_share_directory("fanuc_crx_description")
+    pkg_depthai_desc = get_package_share_directory("depthai_descriptions_v3")
+    pkg_gazebo_share_root = os.path.dirname(pkg_gazebo)
     pkg_crx_share_root = os.path.dirname(pkg_crx_desc)
+    pkg_depthai_share_root = os.path.dirname(pkg_depthai_desc)
     urdf_file = os.path.join(pkg_gazebo, "urdf", "crx10ia_gz.urdf.xacro")
     controllers_yaml = os.path.join(pkg_gazebo, "config", "ros2_controllers.yaml")
 
@@ -125,6 +128,31 @@ def _configure(context):
         output="screen",
     )
 
+    gazebo_camera_frame_tf = Node(
+        package="tf2_ros",
+        executable="static_transform_publisher",
+        arguments=[
+            "--frame-id",
+            "oak_rgb_camera_frame",
+            "--child-frame-id",
+            "crx10ia/J6_link/camera",
+        ],
+        parameters=[{"use_sim_time": True}],
+        output="log",
+    )
+
+    pointcloud_reframe_node = Node(
+        package="piper_gazebo",
+        executable="pointcloud_reframe.py",
+        output="screen",
+        parameters=[
+            {"input_topic": "/crx10ia/camera/points"},
+            {"output_topic": "/crx10ia/camera/points_reframed"},
+            {"frame_id": "oak_rgb_camera_optical_frame"},
+            {"xyz_transform": "gazebo_camera_to_optical"},
+        ],
+    )
+
     moveit_stack_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_gazebo, "launch", "fanuc_moveit_stack.launch.py")
@@ -144,12 +172,17 @@ def _configure(context):
     return [
         SetEnvironmentVariable(
             name="GZ_SIM_RESOURCE_PATH",
-            value=f"{pkg_crx_share_root}:{os.environ.get('GZ_SIM_RESOURCE_PATH', '')}",
+            value=(
+                f"{pkg_depthai_share_root}:{pkg_crx_share_root}:{pkg_gazebo_share_root}:"
+                f"{os.environ.get('GZ_SIM_RESOURCE_PATH', '')}"
+            ),
         ),
         gz_sim,
         gz_spawn_entity,
         robot_state_publisher_node,
+        gazebo_camera_frame_tf,
         gz_bridge,
+        pointcloud_reframe_node,
         delayed_spawners,
         moveit_stack_launch,
     ]

@@ -4,7 +4,7 @@ project(fanuc_gazebo)
 find_package(ament_cmake REQUIRED)
 
 install(
-  DIRECTORY config launch urdf worlds srdf
+  DIRECTORY config launch meshes urdf worlds srdf
   DESTINATION share/${PROJECT_NAME}
 )
 
