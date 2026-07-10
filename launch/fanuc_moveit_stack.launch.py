@@ -15,13 +15,13 @@ from moveit_configs_utils.launch_utils import DeclareBooleanLaunchArg
 
 
 def generate_launch_description():
-    pkg_gazebo = get_package_share_directory("fanuc_gazebo")
+    pkg_gazebo = get_package_share_directory("seam_ros2_pkg")
     urdf_file = os.path.join(pkg_gazebo, "urdf", "crx10ia_gz.urdf.xacro")
     controllers_yaml = os.path.join(pkg_gazebo, "config", "ros2_controllers.yaml")
     moveit_controllers = os.path.join(pkg_gazebo, "config", "moveit_controllers.yaml")
 
     moveit_config = (
-        MoveItConfigsBuilder("crx10ia", package_name="fanuc_gazebo")
+        MoveItConfigsBuilder("crx10ia", package_name="seam_ros2_pkg")
         .robot_description(
             file_path=urdf_file,
             mappings={"simulation_controllers": controllers_yaml},

@@ -1,6 +1,8 @@
-# fanuc_gazebo
+# seam_ros2_pkg
 
-Gazebo Harmonic + MoveIt2 simulation for FANUC CRX cobots (ROS 2 Jazzy).
+SEAM robotic welding cell simulation — FANUC CRX-10iA with welding torch, OAK-D
+camera and System-28 welding table + robot pedestal. Gazebo Harmonic + MoveIt2
+(ROS 2 Jazzy).
 
 ## Dependencies
 
@@ -12,7 +14,7 @@ Gazebo Harmonic + MoveIt2 simulation for FANUC CRX cobots (ROS 2 Jazzy).
 ```bash
 cd ~/arms_ws
 source install/setup.bash
-ros2 launch fanuc_gazebo crx_gz_sim.launch.py
+ros2 launch seam_ros2_pkg crx_gz_sim.launch.py
 ```
 
 MoveIt RViz: planning group `manipulator` → Plan & Execute.

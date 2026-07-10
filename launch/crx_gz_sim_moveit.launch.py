@@ -30,7 +30,7 @@ from launch_ros.substitutions import FindPackageShare
 def _configure(context):
     launch_rviz = LaunchConfiguration("launch_rviz").perform(context).lower() in ("true", "1")
 
-    pkg_gazebo = get_package_share_directory("fanuc_gazebo")
+    pkg_gazebo = get_package_share_directory("seam_ros2_pkg")
     pkg_crx_desc = get_package_share_directory("fanuc_crx_description")
     pkg_depthai_desc = get_package_share_directory("depthai_descriptions_v3")
     pkg_gazebo_share_root = os.path.dirname(pkg_gazebo)
@@ -204,7 +204,7 @@ def generate_launch_description():
             DeclareLaunchArgument(
                 "world_file",
                 default_value=PathJoinSubstitution(
-                    [FindPackageShare("fanuc_gazebo"), "worlds", "empty.sdf"]
+                    [FindPackageShare("seam_ros2_pkg"), "worlds", "empty.sdf"]
                 ),
                 description="Gazebo world file",
             ),

@@ -15,7 +15,7 @@ def generate_launch_description():
                 PythonLaunchDescriptionSource(
                     PathJoinSubstitution(
                         [
-                            FindPackageShare("fanuc_gazebo"),
+                            FindPackageShare("seam_ros2_pkg"),
                             "launch",
                             "crx_gz_sim_moveit.launch.py",
                         ]

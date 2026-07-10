@@ -6,10 +6,10 @@
   <xacro:arg name="welding_cell" default="true" />
 
   <xacro:include filename="$(find fanuc_crx_description)/urdf/crx10ia_urdf_macro.xacro"/>
-  <xacro:include filename="$(find fanuc_gazebo)/urdf/crx_gz_ros2_control_macro.xacro"/>
-  <xacro:include filename="$(find fanuc_gazebo)/urdf/welding_torch.xacro"/>
-  <xacro:include filename="$(find fanuc_gazebo)/urdf/include/fanuc_oak_d_pro_w_macros.xacro"/>
-  <xacro:include filename="$(find fanuc_gazebo)/urdf/welding_cell.xacro"/>
+  <xacro:include filename="$(find seam_ros2_pkg)/urdf/crx_gz_ros2_control_macro.xacro"/>
+  <xacro:include filename="$(find seam_ros2_pkg)/urdf/welding_torch.xacro"/>
+  <xacro:include filename="$(find seam_ros2_pkg)/urdf/include/fanuc_oak_d_pro_w_macros.xacro"/>
+  <xacro:include filename="$(find seam_ros2_pkg)/urdf/welding_cell.xacro"/>
 
   <link name="world"/>
   <link name="end_effector"/>

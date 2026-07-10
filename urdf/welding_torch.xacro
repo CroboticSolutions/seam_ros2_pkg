@@ -10,7 +10,7 @@
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
           <mesh
-            filename="package://fanuc_gazebo/meshes/welding_torches/user_torch/Torch.stl"
+            filename="package://seam_ros2_pkg/meshes/welding_torches/user_torch/Torch.stl"
             scale="0.001 0.001 0.001"
           />
         </geometry>
@@ -20,7 +20,7 @@
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
           <mesh
-            filename="package://fanuc_gazebo/meshes/welding_torches/user_torch/Torch.stl"
+            filename="package://seam_ros2_pkg/meshes/welding_torches/user_torch/Torch.stl"
             scale="0.001 0.001 0.001"
           />
         </geometry>
