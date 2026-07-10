@@ -53,32 +53,5 @@
         </visual>
       </link>
     </model>
-    <model name="red_cylinder">
-      <static>true</static>
-      <pose>1.0 0 0.3 0 0 0</pose>
-      <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder>
-              <radius>0.15</radius>
-              <length>0.6</length>
-            </cylinder>
-          </geometry>
-        </collision>
-        <visual name="visual">
-          <geometry>
-            <cylinder>
-              <radius>0.15</radius>
-              <length>0.6</length>
-            </cylinder>
-          </geometry>
-          <material>
-            <ambient>1 0 0 1</ambient>
-            <diffuse>1 0 0 1</diffuse>
-            <specular>0.2 0.05 0.05 1</specular>
-          </material>
-        </visual>
-      </link>
-    </model>
   </world>
 </sdf>

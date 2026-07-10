@@ -2,18 +2,29 @@
 <robot xmlns:xacro="http://wiki.ros.org/xacro" name="crx10ia">
 
   <xacro:arg name="simulation_controllers" default="" />
+  <!-- welding cell (table + robot pedestal); set to false for a bare robot on the floor -->
+  <xacro:arg name="welding_cell" default="true" />
 
   <xacro:include filename="$(find fanuc_crx_description)/urdf/crx10ia_urdf_macro.xacro"/>
   <xacro:include filename="$(find fanuc_gazebo)/urdf/crx_gz_ros2_control_macro.xacro"/>
   <xacro:include filename="$(find fanuc_gazebo)/urdf/welding_torch.xacro"/>
   <xacro:include filename="$(find fanuc_gazebo)/urdf/include/fanuc_oak_d_pro_w_macros.xacro"/>
+  <xacro:include filename="$(find fanuc_gazebo)/urdf/welding_cell.xacro"/>
 
   <link name="world"/>
   <link name="end_effector"/>
 
-  <xacro:crx10ia parent="world" child="end_effector" prefix="">
-    <origin xyz="0 0 0" rpy="0 0 0"/>
-  </xacro:crx10ia>
+  <xacro:if value="$(arg welding_cell)">
+    <xacro:welding_cell parent="world" prefix=""/>
+    <xacro:crx10ia parent="pedestal_mount" child="end_effector" prefix="">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </xacro:crx10ia>
+  </xacro:if>
+  <xacro:unless value="$(arg welding_cell)">
+    <xacro:crx10ia parent="world" child="end_effector" prefix="">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </xacro:crx10ia>
+  </xacro:unless>
 
   <xacro:crx_welding_torch parent="end_effector" prefix=""/>
 

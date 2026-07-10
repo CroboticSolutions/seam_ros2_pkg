@@ -1,0 +1,158 @@
+<?xml version="1.0"?>
+<!--
+  Welding cell: System-28 style welding table (2000x1000) + robot pedestal riser.
+  Dimensions estimated from the real BEAM cell photo (hole grid 100 mm used as scale
+  reference). All dimensions are macro params so they can be corrected after
+  measuring the real cell.
+
+  Frames:
+    - table long axis runs along Y, robot looks across the table in +X
+    - "pedestal_mount" is the top face of the riser -> mount robot base_link here
+-->
+<robot xmlns:xacro="http://wiki.ros.org/xacro">
+
+  <material name="cell_black">
+    <color rgba="0.10 0.10 0.11 1.0"/>
+  </material>
+  <material name="cell_dark_steel">
+    <color rgba="0.17 0.17 0.19 1.0"/>
+  </material>
+  <material name="cell_gray">
+    <color rgba="0.38 0.40 0.43 1.0"/>
+  </material>
+  <material name="cell_pedestal_gray">
+    <color rgba="0.28 0.29 0.32 1.0"/>
+  </material>
+
+  <xacro:macro name="welding_cell" params="
+      parent:=world
+      prefix:=''
+      table_length:=2.0
+      table_width:=1.0
+      table_top_height:=0.87
+      top_section_height:=0.20
+      base_frame_height:=0.12
+      base_frame_overhang:=0.05
+      pedestal_size:=0.40
+      pedestal_height:=0.30
+      table_offset_x:=0.30
+      table_offset_y:=0.35">
+
+    <xacro:property name="cabinet_height"
+        value="${table_top_height - top_section_height - base_frame_height}"/>
+
+    <!-- corner post visual, placed at (px, py) on the base frame -->
+    <xacro:macro name="cell_post" params="px py">
+      <visual>
+        <origin xyz="${px} ${py} ${base_frame_height + cabinet_height/2}"/>
+        <geometry>
+          <box size="0.10 0.10 ${cabinet_height}"/>
+        </geometry>
+        <material name="cell_black"/>
+      </visual>
+    </xacro:macro>
+
+    <!-- ================= welding table ================= -->
+    <link name="${prefix}welding_table_link">
+      <!-- perforated top plate + side rails, modelled as one dark block -->
+      <visual>
+        <origin xyz="0 0 ${table_top_height - top_section_height/2}"/>
+        <geometry>
+          <box size="${table_width} ${table_length} ${top_section_height}"/>
+        </geometry>
+        <material name="cell_dark_steel"/>
+      </visual>
+      <!-- cabinet section under the top -->
+      <visual>
+        <origin xyz="0 0 ${base_frame_height + cabinet_height/2}"/>
+        <geometry>
+          <box size="${table_width - 0.15} ${table_length - 0.30} ${cabinet_height}"/>
+        </geometry>
+        <material name="cell_gray"/>
+      </visual>
+      <!-- corner posts -->
+      <xacro:cell_post px="${ (table_width - 0.10)/2}" py="${ (table_length - 0.10)/2}"/>
+      <xacro:cell_post px="${ (table_width - 0.10)/2}" py="${-(table_length - 0.10)/2}"/>
+      <xacro:cell_post px="${-(table_width - 0.10)/2}" py="${ (table_length - 0.10)/2}"/>
+      <xacro:cell_post px="${-(table_width - 0.10)/2}" py="${-(table_length - 0.10)/2}"/>
+      <!-- floor base frame (forklift pockets) -->
+      <visual>
+        <origin xyz="0 0 ${base_frame_height/2}"/>
+        <geometry>
+          <box size="${table_width + 2*base_frame_overhang} ${table_length + 2*base_frame_overhang} ${base_frame_height}"/>
+        </geometry>
+        <material name="cell_black"/>
+      </visual>
+
+      <collision>
+        <origin xyz="0 0 ${table_top_height - top_section_height/2}"/>
+        <geometry>
+          <box size="${table_width} ${table_length} ${top_section_height}"/>
+        </geometry>
+      </collision>
+      <collision>
+        <origin xyz="0 0 ${base_frame_height + cabinet_height/2}"/>
+        <geometry>
+          <box size="${table_width - 0.15} ${table_length - 0.30} ${cabinet_height}"/>
+        </geometry>
+      </collision>
+      <collision>
+        <origin xyz="0 0 ${base_frame_height/2}"/>
+        <geometry>
+          <box size="${table_width + 2*base_frame_overhang} ${table_length + 2*base_frame_overhang} ${base_frame_height}"/>
+        </geometry>
+      </collision>
+
+      <inertial>
+        <mass value="800"/>
+        <origin xyz="0 0 ${table_top_height/2}"/>
+        <inertia ixx="300" iyy="300" izz="300" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+    </link>
+
+    <joint name="${prefix}welding_table_joint" type="fixed">
+      <parent link="${parent}"/>
+      <child link="${prefix}welding_table_link"/>
+      <origin xyz="${table_offset_x} ${table_offset_y} 0" rpy="0 0 0"/>
+    </joint>
+
+    <!-- ================= robot pedestal riser ================= -->
+    <!-- sits on the table top at the rear edge; robot axis = riser axis -->
+    <link name="${prefix}robot_pedestal_link">
+      <visual>
+        <origin xyz="0 0 ${pedestal_height/2}"/>
+        <geometry>
+          <box size="${pedestal_size} ${pedestal_size} ${pedestal_height}"/>
+        </geometry>
+        <material name="cell_pedestal_gray"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 ${pedestal_height/2}"/>
+        <geometry>
+          <box size="${pedestal_size} ${pedestal_size} ${pedestal_height}"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <mass value="60"/>
+        <origin xyz="0 0 ${pedestal_height/2}"/>
+        <inertia ixx="2" iyy="2" izz="2" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+    </link>
+
+    <joint name="${prefix}robot_pedestal_joint" type="fixed">
+      <parent link="${parent}"/>
+      <child link="${prefix}robot_pedestal_link"/>
+      <origin xyz="0 0 ${table_top_height}" rpy="0 0 0"/>
+    </joint>
+
+    <!-- mount frame for the robot base -->
+    <link name="${prefix}pedestal_mount"/>
+    <joint name="${prefix}pedestal_mount_joint" type="fixed">
+      <parent link="${prefix}robot_pedestal_link"/>
+      <child link="${prefix}pedestal_mount"/>
+      <origin xyz="0 0 ${pedestal_height}" rpy="0 0 0"/>
+    </joint>
+
+  </xacro:macro>
+
+</robot>
