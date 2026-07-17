@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<!--
+  Physical FANUC CRX-10iA + ROBO WH-PP W500 torch + RealSense D435.
+
+  Uses fanuc_hardware_interface ros2_control (Stream Motion / mock).
+  Gazebo plugins are intentionally omitted.
+-->
+<robot xmlns:xacro="http://wiki.ros.org/xacro" name="crx10ia">
+
+  <xacro:arg name="robot_ip" default="192.168.1.100"/>
+  <xacro:arg name="rmi_port" default="16001"/>
+  <xacro:arg name="stream_motion_port" default="60015"/>
+  <xacro:arg name="use_mock" default="false"/>
+  <xacro:arg name="motion_control" default="1"/>
+  <xacro:arg name="gpio_configuration" default=""/>
+  <xacro:arg name="payload_schedule" default="1"/>
+  <xacro:arg name="out_cmd_interp_buff_target" default="8"/>
+  <xacro:arg name="force_sensor_type" default="1"/>
+  <xacro:arg name="welding_cell" default="true"/>
+  <xacro:arg name="prefix" default=""/>
+
+  <xacro:include filename="$(find fanuc_crx_description)/urdf/crx10ia_urdf_macro.xacro"/>
+  <xacro:include filename="$(find seam_ros2_pkg)/urdf/welding_torch.xacro"/>
+  <xacro:include filename="$(find seam_ros2_pkg)/urdf/include/fanuc_realsense_d435_handeye_macros.xacro"/>
+  <xacro:include filename="$(find seam_ros2_pkg)/urdf/welding_cell.xacro"/>
+
+  <xacro:if value="$(arg use_mock)">
+    <xacro:include filename="$(find fanuc_hardware_interface)/config/crx_mock_ros2_control_macro.xacro"/>
+  </xacro:if>
+  <xacro:unless value="$(arg use_mock)">
+    <xacro:include filename="$(find fanuc_hardware_interface)/config/crx_physical_ros2_control_macro.xacro"/>
+  </xacro:unless>
+
+  <link name="world"/>
+  <link name="end_effector"/>
+
+  <xacro:if value="$(arg welding_cell)">
+    <xacro:welding_cell parent="world" prefix=""/>
+    <xacro:crx10ia parent="pedestal_mount" child="end_effector" prefix="$(arg prefix)">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </xacro:crx10ia>
+  </xacro:if>
+  <xacro:unless value="$(arg welding_cell)">
+    <xacro:crx10ia parent="world" child="end_effector" prefix="$(arg prefix)">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </xacro:crx10ia>
+  </xacro:unless>
+
+  <xacro:crx_welding_torch parent="end_effector" prefix=""/>
+  <xacro:fanuc_mount_realsense_d435_handeye parent_link="J6_link" use_mesh="true"/>
+
+  <xacro:crx_control name="crx10ia" prefix="$(arg prefix)"/>
+
+</robot>

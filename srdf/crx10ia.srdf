@@ -70,6 +70,14 @@ SPDX-License-Identifier: Apache-2.0
   <disable_collisions link1="welding_torch" link2="oak-d_frame" reason="Never"/>
   <disable_collisions link1="welding_torch" link2="oak_model_origin" reason="Never"/>
   <disable_collisions link1="welding_torch" link2="oak_rgb_camera_frame" reason="Never"/>
+  <!-- RealSense D435 (physical / crx10ia_real.urdf.xacro) -->
+  <disable_collisions link1="J6_link" link2="fanuc_realsense_mount" reason="Adjacent"/>
+  <disable_collisions link1="J6_link" link2="camera_bottom_screw_frame" reason="Adjacent"/>
+  <disable_collisions link1="J6_link" link2="camera_link" reason="Adjacent"/>
+  <disable_collisions link1="J5_link" link2="fanuc_realsense_mount" reason="Never"/>
+  <disable_collisions link1="J5_link" link2="camera_link" reason="Never"/>
+  <disable_collisions link1="welding_torch" link2="fanuc_realsense_mount" reason="Never"/>
+  <disable_collisions link1="welding_torch" link2="camera_link" reason="Never"/>
   <!-- welding cell (table + pedestal) -->
   <disable_collisions link1="base_link" link2="robot_pedestal_link" reason="Adjacent"/>
   <disable_collisions link1="robot_pedestal_link" link2="welding_table_link" reason="Adjacent"/>

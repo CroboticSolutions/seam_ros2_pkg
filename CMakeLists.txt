@@ -8,4 +8,9 @@ install(
   DESTINATION share/${PROJECT_NAME}
 )
 
+install(
+  PROGRAMS scripts/smoke_fanuc_real.sh
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 ament_package()

@@ -1,0 +1,34 @@
+# Placeholder GPIO map for ROBO WH-PP W500 / weld cell on FANUC CRX.
+#
+# Fill DO/DI indices from the teach pendant before enabling weld I/O from ROS.
+# Passed to fanuc_hardware_interface via gpio_config_package/path or xacro
+# gpio_configuration:=/full/path/to/this/file.yaml
+#
+# Types follow fanuc_msgs IO conventions (DO/DI/F/...). Indices below are
+# placeholders — replace with the real cell mapping on site.
+
+gpio_topic_config:
+  io_state:
+    - type: DO
+      start: 1
+      length: 16
+    - type: DI
+      start: 1
+      length: 16
+  io_cmd:
+    - type: DO
+      start: 1
+      length: 16
+  num_reg_state:
+    - start: 1
+      length: 8
+  num_reg_cmd:
+    - start: 1
+      length: 8
+
+# Suggested semantic map (document only — wire in application code):
+#   weld_start_do:     DO[?]   # arc on
+#   gas_purge_do:      DO[?]
+#   wire_feed_do:      DO[?]
+#   torch_collision_di: DI[?]
+#   coolant_ok_di:     DI[?]
