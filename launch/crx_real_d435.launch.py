@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-"""Physical FANUC CRX-10iA + WH-PP W500 + MoveIt (RealSense launched separately).
+"""Physical FANUC CRX-10iA + WH-PP W500 + MoveIt (camera launched separately).
 
 Site / GUI wizard entry point. Example:
 
   ros2 launch seam_ros2_pkg crx_real_d435.launch.py \\
-    robot_ip:=192.168.1.100 use_mock:=false
+    robot_ip:=192.168.1.100 use_mock:=false camera_model:=realsense_d435
+
+  camera_model: realsense_d435 | oak_d_pro_w | oak_sr
 
 Offline dry-run (no robot):
 
@@ -37,6 +39,7 @@ def _launch_setup(context, *args, **kwargs):
     use_mock = LaunchConfiguration("use_mock").perform(context)
     motion_control = LaunchConfiguration("motion_control").perform(context)
     welding_cell = LaunchConfiguration("welding_cell").perform(context)
+    camera_model = LaunchConfiguration("camera_model").perform(context)
     gpio_configuration = LaunchConfiguration("gpio_configuration").perform(context)
     if not gpio_configuration:
         gpio_configuration = gpio_yaml
@@ -65,6 +68,8 @@ def _launch_setup(context, *args, **kwargs):
             welding_cell,
             " gpio_configuration:=",
             gpio_configuration,
+            " camera_model:=",
+            camera_model,
         ]
     )
     robot_description = {
@@ -81,6 +86,7 @@ def _launch_setup(context, *args, **kwargs):
                 "motion_control": motion_control,
                 "welding_cell": welding_cell,
                 "gpio_configuration": gpio_configuration,
+                "camera_model": camera_model,
             },
         )
         .robot_description_semantic(file_path="srdf/crx10ia.srdf")
@@ -215,6 +221,13 @@ def generate_launch_description():
                 "prefix",
                 default_value="",
                 description="Joint name prefix (must match URDF)",
+            ),
+            DeclareLaunchArgument(
+                "camera_model",
+                default_value="realsense_d435",
+                description=(
+                    "Wrist camera URDF mount: realsense_d435 | oak_d_pro_w | oak_sr"
+                ),
             ),
             DeclareLaunchArgument(
                 "rviz_config",

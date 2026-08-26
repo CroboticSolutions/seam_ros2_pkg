@@ -1,6 +1,9 @@
 <?xml version="1.0"?>
 <!--
-  Physical FANUC CRX-10iA + ROBO WH-PP W500 torch + RealSense D435.
+  Physical FANUC CRX-10iA + ROBO WH-PP W500 torch + wrist camera.
+
+  camera_model: realsense_d435 | oak_d_pro_w | oak_sr
+  Camera driver is launched separately; URDF owns TF (driver publish_tf off).
 
   Uses fanuc_hardware_interface ros2_control (Stream Motion / mock).
   Gazebo plugins are intentionally omitted.
@@ -18,11 +21,22 @@
   <xacro:arg name="force_sensor_type" default="1"/>
   <xacro:arg name="welding_cell" default="true"/>
   <xacro:arg name="prefix" default=""/>
+  <xacro:arg name="camera_model" default="realsense_d435"/>
+  <xacro:property name="camera_model_selected" value="$(arg camera_model)"/>
 
   <xacro:include filename="$(find fanuc_crx_description)/urdf/crx10ia_urdf_macro.xacro"/>
   <xacro:include filename="$(find seam_ros2_pkg)/urdf/welding_torch.xacro"/>
-  <xacro:include filename="$(find seam_ros2_pkg)/urdf/include/fanuc_realsense_d435_handeye_macros.xacro"/>
   <xacro:include filename="$(find seam_ros2_pkg)/urdf/welding_cell.xacro"/>
+
+  <xacro:if value="${camera_model_selected == 'realsense_d435'}">
+    <xacro:include filename="$(find seam_ros2_pkg)/urdf/include/fanuc_realsense_d435_handeye_macros.xacro"/>
+  </xacro:if>
+  <xacro:if value="${camera_model_selected == 'oak_d_pro_w'}">
+    <xacro:include filename="$(find seam_ros2_pkg)/urdf/include/fanuc_oak_d_pro_w_macros.xacro"/>
+  </xacro:if>
+  <xacro:if value="${camera_model_selected == 'oak_sr'}">
+    <xacro:include filename="$(find seam_ros2_pkg)/urdf/include/fanuc_oak_d_sr_handeye_macros.xacro"/>
+  </xacro:if>
 
   <xacro:if value="$(arg use_mock)">
     <xacro:include filename="$(find fanuc_hardware_interface)/config/crx_mock_ros2_control_macro.xacro"/>
@@ -47,7 +61,16 @@
   </xacro:unless>
 
   <xacro:crx_welding_torch parent="end_effector" prefix=""/>
-  <xacro:fanuc_mount_realsense_d435_handeye parent_link="J6_link" use_mesh="true"/>
+
+  <xacro:if value="${camera_model_selected == 'realsense_d435'}">
+    <xacro:fanuc_mount_realsense_d435_handeye parent_link="J6_link" use_mesh="true"/>
+  </xacro:if>
+  <xacro:if value="${camera_model_selected == 'oak_d_pro_w'}">
+    <xacro:fanuc_mount_oak_d_pro_w parent_link="J6_link" simulation="false"/>
+  </xacro:if>
+  <xacro:if value="${camera_model_selected == 'oak_sr'}">
+    <xacro:fanuc_mount_oak_d_sr_handeye parent_link="J6_link" simulation="false" oak_visual_mesh="true"/>
+  </xacro:if>
 
   <xacro:crx_control name="crx10ia" prefix="$(arg prefix)"/>
 

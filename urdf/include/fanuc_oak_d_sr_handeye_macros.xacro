@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+<!--
+  FANUC CRX + OAK-D-SR (depthai OAK-D-SR URDF frames).
+
+  Eye-in-hand mount on J6_link for physical cells. Optical frame matches
+  camera_topic_profile OAK_SR: oak_right_camera_optical_frame.
+
+  Nominal mount reuses the same J6 → oak-d-base-frame pose as the OAK-D Pro W
+  sim mount (forward-down toward weld). Re-calibrate with hand_eye_calibration
+  when a physical camera is mounted, then bake the fixed joint.
+
+  J6_link → oak-d-base-frame (placeholder until site hand-eye):
+    xyz = 0.300000000 0.000000000 0.130000000
+    rpy = 0.000000000 0.349065850 0.000000000   (0, +20 deg pitch, 0)
+-->
+<robot xmlns:xacro="http://ros.org/wiki/xacro" name="fanuc_oak_d_sr_attachment_defs">
+  <xacro:include filename="$(find depthai_descriptions_v3)/urdf/include/depthai_macro.urdf.xacro"/>
+
+  <xacro:macro name="fanuc_mount_oak_d_sr_handeye" params="parent_link simulation:=false oak_visual_mesh:=true">
+    <link name="oak-d-base-frame"/>
+    <joint name="fanuc_oak_sr_j6_mount" type="fixed">
+      <origin
+        xyz="0.300000000 0.000000000 0.130000000"
+        rpy="0.000000000 0.349065850 0.000000000"/>
+      <parent link="${parent_link}"/>
+      <child link="oak-d-base-frame"/>
+    </joint>
+
+    <xacro:if value="${oak_visual_mesh}">
+      <xacro:depthai_camera
+        camera_name="oak"
+        parent="oak-d-base-frame"
+        camera_model="OAK-D-SR"
+        base_frame="oak-d_frame"
+        cam_pos_x="0.0"
+        cam_pos_y="0.0"
+        cam_pos_z="0.0"
+        cam_roll="0.0"
+        cam_pitch="0.0"
+        cam_yaw="0.0"
+        simulation="${simulation}"
+        rs_compat="false"/>
+    </xacro:if>
+
+    <!-- TF-only tree (no STL) when oak_visual_mesh:=false -->
+    <xacro:unless value="${oak_visual_mesh}">
+      <xacro:property name="oak_sr_pi" value="3.1415926535897931"/>
+      <xacro:property name="oak_sr_half_base" value="0.01"/>
+      <link name="oak-d_frame"/>
+      <joint name="oak_center_joint" type="fixed">
+        <parent link="oak-d-base-frame"/>
+        <child link="oak-d_frame"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+      </joint>
+      <link name="oak_left_camera_frame"/>
+      <joint name="oak_left_camera_joint" type="fixed">
+        <parent link="oak-d_frame"/>
+        <child link="oak_left_camera_frame"/>
+        <origin xyz="0 ${oak_sr_half_base} 0" rpy="0 0 0"/>
+      </joint>
+      <link name="oak_left_camera_optical_frame"/>
+      <joint name="oak_left_camera_optical_joint" type="fixed">
+        <origin xyz="0 0 0" rpy="-${oak_sr_pi/2} 0 -${oak_sr_pi/2}"/>
+        <parent link="oak_left_camera_frame"/>
+        <child link="oak_left_camera_optical_frame"/>
+      </joint>
+      <link name="oak_right_camera_frame"/>
+      <joint name="oak_right_camera_joint" type="fixed">
+        <parent link="oak-d_frame"/>
+        <child link="oak_right_camera_frame"/>
+        <origin xyz="0 -${oak_sr_half_base} 0" rpy="0 0 0"/>
+      </joint>
+      <link name="oak_right_camera_optical_frame"/>
+      <joint name="oak_right_camera_optical_joint" type="fixed">
+        <origin xyz="0 0 0" rpy="-${oak_sr_pi/2} 0 -${oak_sr_pi/2}"/>
+        <parent link="oak_right_camera_frame"/>
+        <child link="oak_right_camera_optical_frame"/>
+      </joint>
+    </xacro:unless>
+  </xacro:macro>
+</robot>

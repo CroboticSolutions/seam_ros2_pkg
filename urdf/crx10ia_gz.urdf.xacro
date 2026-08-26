@@ -4,11 +4,19 @@
   <xacro:arg name="simulation_controllers" default="" />
   <!-- welding cell (table + robot pedestal); set to false for a bare robot on the floor -->
   <xacro:arg name="welding_cell" default="true" />
+  <!-- gazebo_oak | realsense_d435 | none (hybrid: real cam + identity static TF) -->
+  <xacro:arg name="wrist_camera" default="gazebo_oak" />
+  <xacro:property name="wrist_camera_selected" value="$(arg wrist_camera)"/>
 
   <xacro:include filename="$(find fanuc_crx_description)/urdf/crx10ia_urdf_macro.xacro"/>
   <xacro:include filename="$(find seam_ros2_pkg)/urdf/crx_gz_ros2_control_macro.xacro"/>
   <xacro:include filename="$(find seam_ros2_pkg)/urdf/welding_torch.xacro"/>
-  <xacro:include filename="$(find seam_ros2_pkg)/urdf/include/fanuc_oak_d_pro_w_macros.xacro"/>
+  <xacro:if value="${wrist_camera_selected == 'gazebo_oak'}">
+    <xacro:include filename="$(find seam_ros2_pkg)/urdf/include/fanuc_oak_d_pro_w_macros.xacro"/>
+  </xacro:if>
+  <xacro:if value="${wrist_camera_selected == 'realsense_d435'}">
+    <xacro:include filename="$(find seam_ros2_pkg)/urdf/include/fanuc_realsense_d435_handeye_macros.xacro"/>
+  </xacro:if>
   <xacro:include filename="$(find seam_ros2_pkg)/urdf/welding_cell.xacro"/>
 
   <link name="world"/>
@@ -28,7 +36,12 @@
 
   <xacro:crx_welding_torch parent="end_effector" prefix=""/>
 
-  <xacro:fanuc_mount_oak_d_pro_w parent_link="J6_link" simulation="true" oak_gazebo_rgbd_sensor="true"/>
+  <xacro:if value="${wrist_camera_selected == 'gazebo_oak'}">
+    <xacro:fanuc_mount_oak_d_pro_w parent_link="J6_link" simulation="true" oak_gazebo_rgbd_sensor="true"/>
+  </xacro:if>
+  <xacro:if value="${wrist_camera_selected == 'realsense_d435'}">
+    <xacro:fanuc_mount_realsense_d435_handeye parent_link="J6_link" use_mesh="true"/>
+  </xacro:if>
 
   <xacro:crx_gz_control name="crx10ia" prefix=""/>
 

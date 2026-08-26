@@ -8,10 +8,11 @@
   Do NOT run rs_launch.py with publish_tf true. robot_state_publisher owns
   the camera TF tree via this macro.
 
-  PLACEHOLDER mount (rough, copied from the sim OAK mid-gun pose). After site
-  hand-eye calibration, bake the result with hand_eye_calibration.realsense_mount_cli
-  (joint name fanuc_j6_realsense_d435_mount), then rebuild seam_ros2_pkg and
-  restart the stack.
+    PLACEHOLDER mount intentionally reuses the FANUC OAK-D Pro W mid-gun pose
+  (same xyz/rpy as fanuc_oak_d_pro_w_macros.xacro). Optical frame names still
+  match realsense2_camera (camera_color_optical_frame, …). After site hand-eye,
+  bake with hand_eye_calibration.realsense_mount_cli
+  (joint name fanuc_j6_realsense_d435_mount), then rebuild seam_ros2_pkg.
 -->
 <robot xmlns:xacro="http://ros.org/wiki/xacro" name="fanuc_realsense_d435_attachment_defs">
 
@@ -20,7 +21,7 @@
 
     <link name="fanuc_realsense_mount"/>
     <joint name="fanuc_j6_realsense_d435_mount" type="fixed">
-      <!-- PLACEHOLDER: replace after hand-eye (see file header). -->
+      <!-- OAK mid-gun mount (fanuc_oak_d_pro_w); fine until site hand-eye. -->
       <origin
         xyz="0.300000000000 0.000000000000 0.130000000000"
         rpy="0.000000000000 0.349065850000 0.000000000000"/>

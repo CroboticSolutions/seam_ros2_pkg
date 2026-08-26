@@ -9,7 +9,9 @@ install(
 )
 
 install(
-  PROGRAMS scripts/smoke_fanuc_real.sh
+  PROGRAMS
+    scripts/smoke_fanuc_real.sh
+    scripts/hybrid_camera_stamp_sync.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

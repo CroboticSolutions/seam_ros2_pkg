@@ -14,6 +14,8 @@
   <exec_depend>fanuc_crx_description</exec_depend>
   <exec_depend>fanuc_hardware_interface</exec_depend>
   <exec_depend>gz_ros2_control</exec_depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>realsense2_camera</exec_depend>
   <exec_depend>realsense2_description</exec_depend>
   <exec_depend>moveit_configs_utils</exec_depend>

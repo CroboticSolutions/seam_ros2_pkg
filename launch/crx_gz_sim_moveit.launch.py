@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""Gazebo Harmonic + MoveIt for FANUC CRX-10iA (piper_sim_moveit.launch.py pattern)."""
+"""Gazebo Harmonic + MoveIt for FANUC CRX-10iA (piper_sim_moveit.launch.py pattern).
+
+wrist_camera:
+  gazebo_oak (default) — Gazebo RGB-D sensor + image bridge
+  realsense_d435 — URDF D435 TF only; launch realsense2_camera separately
+  none — no wrist camera in URDF (hybrid: identity static TF + real D435)
+"""
 
 import os
 
@@ -29,6 +35,13 @@ from launch_ros.substitutions import FindPackageShare
 
 def _configure(context):
     launch_rviz = LaunchConfiguration("launch_rviz").perform(context).lower() in ("true", "1")
+    wrist_camera = LaunchConfiguration("wrist_camera").perform(context).strip()
+    if wrist_camera not in ("gazebo_oak", "realsense_d435", "none"):
+        raise RuntimeError(
+            f"unsupported wrist_camera={wrist_camera!r}; "
+            "expected gazebo_oak, realsense_d435, or none"
+        )
+    no_gz_camera = wrist_camera in ("realsense_d435", "none")
 
     pkg_gazebo = get_package_share_directory("seam_ros2_pkg")
     pkg_crx_desc = get_package_share_directory("fanuc_crx_description")
@@ -36,8 +49,25 @@ def _configure(context):
     pkg_gazebo_share_root = os.path.dirname(pkg_gazebo)
     pkg_crx_share_root = os.path.dirname(pkg_crx_desc)
     pkg_depthai_share_root = os.path.dirname(pkg_depthai_desc)
+    resource_roots = [
+        pkg_depthai_share_root,
+        pkg_crx_share_root,
+        pkg_gazebo_share_root,
+    ]
+    if wrist_camera == "realsense_d435":
+        try:
+            resource_roots.insert(
+                0, os.path.dirname(get_package_share_directory("realsense2_description"))
+            )
+        except Exception:
+            pass
     urdf_file = os.path.join(pkg_gazebo, "urdf", "crx10ia_gz.urdf.xacro")
     controllers_yaml = os.path.join(pkg_gazebo, "config", "ros2_controllers.yaml")
+    bridge_yaml = os.path.join(
+        pkg_gazebo,
+        "config",
+        "fanuc_gz_bridge_clock_only.yaml" if no_gz_camera else "fanuc_gz_bridge.yaml",
+    )
 
     robot_description_content = Command(
         [
@@ -46,6 +76,8 @@ def _configure(context):
             TextSubstitution(text=urdf_file),
             TextSubstitution(text=" simulation_controllers:="),
             TextSubstitution(text=controllers_yaml),
+            TextSubstitution(text=" wrist_camera:="),
+            TextSubstitution(text=wrist_camera),
         ]
     )
     robot_description = {
@@ -121,71 +153,76 @@ def _configure(context):
         executable="parameter_bridge",
         parameters=[
             {
-                "config_file": os.path.join(pkg_gazebo, "config", "fanuc_gz_bridge.yaml"),
+                "config_file": bridge_yaml,
                 "use_sim_time": True,
             }
         ],
         output="screen",
     )
 
-    gazebo_camera_frame_tf = Node(
-        package="tf2_ros",
-        executable="static_transform_publisher",
-        arguments=[
-            "--frame-id",
-            "oak_rgb_camera_frame",
-            "--child-frame-id",
-            "crx10ia/J6_link/camera",
-        ],
-        parameters=[{"use_sim_time": True}],
-        output="log",
-    )
-
-    pointcloud_reframe_node = Node(
-        package="piper_gazebo",
-        executable="pointcloud_reframe.py",
-        output="screen",
-        parameters=[
-            {"input_topic": "/crx10ia/camera/points"},
-            {"output_topic": "/crx10ia/camera/points_reframed"},
-            {"frame_id": "oak_rgb_camera_optical_frame"},
-            {"xyz_transform": "gazebo_camera_to_optical"},
-        ],
-    )
-
-    moveit_stack_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(pkg_gazebo, "launch", "fanuc_moveit_stack.launch.py")
-        ),
-        launch_arguments={
-            "use_sim_time": "true",
-            "launch_rviz": "true" if launch_rviz else "false",
-        }.items(),
-        condition=IfCondition(LaunchConfiguration("launch_move_group")),
-    )
-
-    delayed_spawners = TimerAction(
-        period=5.0,
-        actions=[joint_state_broadcaster_spawner, arm_controller_spawner],
-    )
-
-    return [
+    actions = [
         SetEnvironmentVariable(
             name="GZ_SIM_RESOURCE_PATH",
             value=(
-                f"{pkg_depthai_share_root}:{pkg_crx_share_root}:{pkg_gazebo_share_root}:"
-                f"{os.environ.get('GZ_SIM_RESOURCE_PATH', '')}"
+                ":".join(resource_roots)
+                + ":"
+                + os.environ.get("GZ_SIM_RESOURCE_PATH", "")
             ),
         ),
         gz_sim,
         gz_spawn_entity,
         robot_state_publisher_node,
-        gazebo_camera_frame_tf,
         gz_bridge,
-        pointcloud_reframe_node,
-        delayed_spawners,
-        moveit_stack_launch,
     ]
+
+    if wrist_camera == "gazebo_oak":
+        actions.append(
+            Node(
+                package="tf2_ros",
+                executable="static_transform_publisher",
+                arguments=[
+                    "--frame-id",
+                    "oak_rgb_camera_frame",
+                    "--child-frame-id",
+                    "crx10ia/J6_link/camera",
+                ],
+                parameters=[{"use_sim_time": True}],
+                output="log",
+            )
+        )
+        actions.append(
+            Node(
+                package="piper_gazebo",
+                executable="pointcloud_reframe.py",
+                output="screen",
+                parameters=[
+                    {"input_topic": "/crx10ia/camera/points"},
+                    {"output_topic": "/crx10ia/camera/points_reframed"},
+                    {"frame_id": "oak_rgb_camera_optical_frame"},
+                    {"xyz_transform": "gazebo_camera_to_optical"},
+                ],
+            )
+        )
+
+    delayed_spawners = TimerAction(
+        period=5.0,
+        actions=[joint_state_broadcaster_spawner, arm_controller_spawner],
+    )
+    actions.append(delayed_spawners)
+    actions.append(
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                os.path.join(pkg_gazebo, "launch", "fanuc_moveit_stack.launch.py")
+            ),
+            launch_arguments={
+                "use_sim_time": "true",
+                "launch_rviz": "true" if launch_rviz else "false",
+                "wrist_camera": wrist_camera,
+            }.items(),
+            condition=IfCondition(LaunchConfiguration("launch_move_group")),
+        )
+    )
+    return actions
 
 
 def generate_launch_description():
@@ -212,6 +249,11 @@ def generate_launch_description():
                 "launch_move_group",
                 default_value="true",
                 description="Launch MoveIt move_group and RViz",
+            ),
+            DeclareLaunchArgument(
+                "wrist_camera",
+                default_value="gazebo_oak",
+                description="gazebo_oak | realsense_d435 | none",
             ),
             OpaqueFunction(function=_configure),
         ]
