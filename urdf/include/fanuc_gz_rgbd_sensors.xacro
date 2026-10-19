@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<!--
+  Gazebo colour + depth sensors for the simulated wrist D435 / Femto Bolt.
+
+  Separate colour and depth sensors on camera_color_frame / camera_depth_frame
+  (same pattern as piper_description's d435_gazebo_sensors.xacro). The depth image
+  is the ideal render; piper_gazebo's d435_depth_processing.py (remapped to
+  /crx10ia/camera/*) adds noise, registers it to colour and publishes the cloud.
+
+  Nominal rectified pinhole optics, not a per-device calibration:
+    gazebo_realsense: D435 colour 1920x1080 69.4x42.5 deg, depth 1280x720 87x58 deg
+    femto_bolt:       Femto colour 1280x720 80x51 deg, depth NFOV unbinned 640x576 75x65 deg
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:macro name="fanuc_gz_rgbd_sensor" params="link name topic optical_frame type format
+                                                    width height hfov vfov near far noise:=0.0">
+    <gazebo reference="${link}">
+      <sensor name="${name}" type="${type}">
+        <topic>${topic}/image</topic>
+        <always_on>true</always_on><update_rate>30</update_rate>
+        <camera>
+          <camera_info_topic>${topic}/camera_info</camera_info_topic>
+          <optical_frame_id>${optical_frame}</optical_frame_id>
+          <horizontal_fov>${hfov * pi / 180}</horizontal_fov>
+          <image><width>${width}</width><height>${height}</height><format>${format}</format></image>
+          <clip><near>${near}</near><far>${far}</far></clip>
+          <lens><intrinsics>
+            <fx>${width / 2 / tan(hfov * pi / 360)}</fx><fy>${height / 2 / tan(vfov * pi / 360)}</fy>
+            <cx>${width / 2}</cx><cy>${height / 2}</cy><s>0</s>
+          </intrinsics></lens>
+          <xacro:if value="${noise > 0}">
+            <noise><type>gaussian</type><mean>0</mean><stddev>${noise}</stddev></noise>
+          </xacro:if>
+        </camera>
+      </sensor>
+    </gazebo>
+  </xacro:macro>
+
+  <xacro:macro name="fanuc_wrist_rgbd_sensors" params="camera">
+    <xacro:property name="d435" value="${camera == 'gazebo_realsense'}"/>
+    <xacro:fanuc_gz_rgbd_sensor link="camera_color_frame" name="camera" type="camera" format="R8G8B8"
+      topic="/crx10ia/wrist/color" optical_frame="camera_color_optical_frame"
+      width="${1920 if d435 else 1280}" height="${1080 if d435 else 720}"
+      hfov="${69.4 if d435 else 80.0}" vfov="${42.5 if d435 else 51.0}"
+      near="0.05" far="20" noise="0.002"/>
+    <!-- Geometry is rendered from 5 cm so near objects still occlude; the depth
+         processor applies the camera's minimum measurable depth. -->
+    <xacro:fanuc_gz_rgbd_sensor link="camera_depth_frame" name="wrist_depth" type="depth_camera" format="R_FLOAT32"
+      topic="/crx10ia/wrist/depth" optical_frame="camera_depth_optical_frame"
+      width="${1280 if d435 else 640}" height="${720 if d435 else 576}"
+      hfov="${87.0 if d435 else 75.0}" vfov="${58.0 if d435 else 65.0}"
+      near="0.05" far="10"/>
+  </xacro:macro>
+
+</robot>

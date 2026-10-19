@@ -83,4 +83,21 @@ SPDX-License-Identifier: Apache-2.0
   <disable_collisions link1="robot_pedestal_link" link2="welding_table_link" reason="Adjacent"/>
   <disable_collisions link1="base_link" link2="welding_table_link" reason="Never"/>
   <disable_collisions link1="J1_link" link2="robot_pedestal_link" reason="Never"/>
+  <!-- crx10ia_l welding cell (crx_description crx10ia_l_cell.xacro, model:=crx10ia_l only) -->
+  <disable_collisions link1="base_link" link2="cell_table_link" reason="Adjacent"/>
+  <disable_collisions link1="base_link" link2="cell_robot_pedestal_link" reason="Adjacent"/>
+  <disable_collisions link1="base_link" link2="cell_positioner_link" reason="Adjacent"/>
+  <disable_collisions link1="base_link" link2="cell_feeder_link" reason="Adjacent"/>
+  <disable_collisions link1="cell_table_link" link2="cell_robot_pedestal_link" reason="Adjacent"/>
+  <disable_collisions link1="cell_table_link" link2="cell_positioner_link" reason="Adjacent"/>
+  <disable_collisions link1="cell_table_link" link2="cell_feeder_link" reason="Adjacent"/>
+  <disable_collisions link1="cell_robot_pedestal_link" link2="cell_positioner_link" reason="Adjacent"/>
+  <disable_collisions link1="cell_robot_pedestal_link" link2="cell_feeder_link" reason="Adjacent"/>
+  <disable_collisions link1="cell_positioner_link" link2="cell_feeder_link" reason="Adjacent"/>
+  <disable_collisions link1="J1_link" link2="cell_robot_pedestal_link" reason="Never"/>
+  <disable_collisions link1="J1_link" link2="cell_table_link" reason="Never"/>
+  <!-- Femto Bolt on flange (crx_description crx_wrist_camera.xacro). -->
+  <disable_collisions link1="J6_link" link2="camera_base_link" reason="Adjacent"/>
+  <disable_collisions link1="J5_link" link2="camera_base_link" reason="Never"/>
+  <disable_collisions link1="welding_torch" link2="camera_base_link" reason="Never"/>
 </robot>

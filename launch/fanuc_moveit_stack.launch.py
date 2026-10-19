@@ -29,6 +29,9 @@ def generate_launch_description():
             mappings={
                 "simulation_controllers": controllers_yaml,
                 "wrist_camera": wrist_camera,
+                "model": LaunchConfiguration("model"),
+                "camera_calibration": LaunchConfiguration("camera_calibration"),
+                "tcp_calibration": LaunchConfiguration("tcp_calibration"),
             },
         )
         .robot_description_semantic(file_path="srdf/crx10ia.srdf")
@@ -61,9 +64,20 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "wrist_camera",
             default_value="gazebo_oak",
-            description="Must match crx_gz_sim wrist_camera (gazebo_oak|realsense_d435|none)",
+            description="Must match crx_gz_sim wrist_camera "
+                        "(gazebo_oak|gazebo_realsense|femto_bolt|realsense_d435|none)",
         )
     )
+    ld.add_action(
+        DeclareLaunchArgument(
+            "model",
+            default_value="crx10ia",
+            description="Must match crx_gz_sim model (crx10ia|crx10ia_l)",
+        )
+    )
+    for name in ("camera_calibration", "tcp_calibration"):
+        ld.add_action(DeclareLaunchArgument(name, default_value="",
+                                            description="Must match crx_gz_sim " + name))
     ld.add_action(
         DeclareLaunchArgument(
             "launch_rviz",
@@ -97,6 +111,9 @@ def generate_launch_description():
     }
 
     moveit_dict = moveit_config.to_dict()
+    # move_group reads robot_description from robot_state_publisher's topic and respawns,
+    # so GUI calibration Apply can push a new URDF and restart move_group alone.
+    moveit_dict.pop("robot_description", None)
     use_sim = ParameterValue(LaunchConfiguration("use_sim_time"), value_type=bool)
     move_group_params = [
         moveit_dict,
@@ -109,6 +126,8 @@ def generate_launch_description():
             package="moveit_ros_move_group",
             executable="move_group",
             output="screen",
+            respawn=True,
+            respawn_delay=1.0,
             parameters=move_group_params,
         )
     )

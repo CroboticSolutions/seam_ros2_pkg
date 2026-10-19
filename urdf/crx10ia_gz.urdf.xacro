@@ -2,45 +2,89 @@
 <robot xmlns:xacro="http://wiki.ros.org/xacro" name="crx10ia">
 
   <xacro:arg name="simulation_controllers" default="" />
-  <!-- welding cell (table + robot pedestal); set to false for a bare robot on the floor -->
+  <!-- welding cell; set to false for a bare robot on the floor.
+       crx10ia_l: digital twin of the real cell (crx_description crx10ia_l_cell.xacro, same as
+       the real bringup); crx10ia: older estimate in welding_cell.xacro -->
   <xacro:arg name="welding_cell" default="true" />
-  <!-- gazebo_oak | realsense_d435 | none (hybrid: real cam + identity static TF) -->
+  <!-- gazebo_oak | gazebo_realsense | femto_bolt | realsense_d435 | none
+       (realsense_d435: TF only; none: hybrid real cam + identity static TF) -->
   <xacro:arg name="wrist_camera" default="gazebo_oak" />
   <xacro:property name="wrist_camera_selected" value="$(arg wrist_camera)"/>
+  <!-- crx10ia | crx10ia_l (fanuc_crx_description macros share link/joint names) -->
+  <xacro:arg name="model" default="crx10ia" />
+  <xacro:property name="model" value="$(arg model)"/>
+  <xacro:property name="gz_rgbd_camera" value="${wrist_camera_selected in ('gazebo_realsense', 'femto_bolt')}"/>
+  <!-- Femto / D435 mount (flange -> camera root, `nominal` origin) and welding TCP (flange ->
+       welding_tcp, `sim` origin) from the calibration store, same files and format as the
+       real crx_description robot (crx_calibration_args.xacro). GUI launches pass the
+       robot's active ~/.ros/calibration/<model>/... current.yaml; '' = crx_description default. -->
+  <xacro:arg name="camera_calibration" default="" />
+  <xacro:arg name="tcp_calibration" default="" />
+  <xacro:property name="store_camera" value="${'femto_bolt' if wrist_camera_selected == 'femto_bolt' else ('realsense_d435' if wrist_camera_selected in ('gazebo_realsense', 'realsense_d435') else '')}"/>
+  <xacro:property name="tcp_sim_origin" value="${xacro.load_yaml('$(arg tcp_calibration)' or '$(find crx_description)/config/calibration/welding_tcp_default.yaml')['sim']}"/>
 
-  <xacro:include filename="$(find fanuc_crx_description)/urdf/crx10ia_urdf_macro.xacro"/>
+  <xacro:include filename="$(find fanuc_crx_description)/urdf/${model}_urdf_macro.xacro"/>
   <xacro:include filename="$(find seam_ros2_pkg)/urdf/crx_gz_ros2_control_macro.xacro"/>
   <xacro:include filename="$(find seam_ros2_pkg)/urdf/welding_torch.xacro"/>
   <xacro:if value="${wrist_camera_selected == 'gazebo_oak'}">
     <xacro:include filename="$(find seam_ros2_pkg)/urdf/include/fanuc_oak_d_pro_w_macros.xacro"/>
   </xacro:if>
-  <xacro:if value="${wrist_camera_selected == 'realsense_d435'}">
-    <xacro:include filename="$(find seam_ros2_pkg)/urdf/include/fanuc_realsense_d435_handeye_macros.xacro"/>
+  <xacro:if value="${store_camera != ''}">
+    <xacro:include filename="$(find crx_description)/urdf/include/crx_wrist_camera.xacro"/>
   </xacro:if>
-  <xacro:include filename="$(find seam_ros2_pkg)/urdf/welding_cell.xacro"/>
+  <xacro:if value="${gz_rgbd_camera}">
+    <xacro:include filename="$(find seam_ros2_pkg)/urdf/include/fanuc_gz_rgbd_sensors.xacro"/>
+  </xacro:if>
+  <xacro:property name="crx10ia_l_cell" value="${model == 'crx10ia_l'}"/>
+  <xacro:if value="${crx10ia_l_cell}">
+    <xacro:include filename="$(find crx_description)/urdf/crx10ia_l/crx10ia_l_cell.xacro"/>
+  </xacro:if>
+  <xacro:unless value="${crx10ia_l_cell}">
+    <xacro:include filename="$(find seam_ros2_pkg)/urdf/welding_cell.xacro"/>
+  </xacro:unless>
 
   <link name="world"/>
   <link name="end_effector"/>
 
   <xacro:if value="$(arg welding_cell)">
-    <xacro:welding_cell parent="world" prefix=""/>
-    <xacro:crx10ia parent="pedestal_mount" child="end_effector" prefix="">
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-    </xacro:crx10ia>
+    <xacro:if value="${crx10ia_l_cell}">
+      <!-- world = floor; the cell hangs below base_link -->
+      <xacro:call macro="${model}" parent="world" child="end_effector" prefix="">
+        <origin xyz="0 0 ${crx10ia_l_cell_table_top_height + crx10ia_l_cell_pedestal_above_table}" rpy="0 0 0"/>
+      </xacro:call>
+      <xacro:crx10ia_l_cell parent="base_link"/>
+    </xacro:if>
+    <xacro:unless value="${crx10ia_l_cell}">
+      <xacro:welding_cell parent="world" prefix=""/>
+      <xacro:call macro="${model}" parent="pedestal_mount" child="end_effector" prefix="">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+      </xacro:call>
+    </xacro:unless>
   </xacro:if>
   <xacro:unless value="$(arg welding_cell)">
-    <xacro:crx10ia parent="world" child="end_effector" prefix="">
+    <xacro:call macro="${model}" parent="world" child="end_effector" prefix="">
       <origin xyz="0 0 0" rpy="0 0 0"/>
-    </xacro:crx10ia>
+    </xacro:call>
   </xacro:unless>
 
-  <xacro:crx_welding_torch parent="end_effector" prefix=""/>
+  <xacro:crx_welding_torch parent="end_effector" prefix=""
+                           tcp_parent="flange" tcp_xyz="${tcp_sim_origin['xyz']}" tcp_rpy="${tcp_sim_origin['rpy']}"/>
 
   <xacro:if value="${wrist_camera_selected == 'gazebo_oak'}">
     <xacro:fanuc_mount_oak_d_pro_w parent_link="J6_link" simulation="true" oak_gazebo_rgbd_sensor="true"/>
   </xacro:if>
-  <xacro:if value="${wrist_camera_selected == 'realsense_d435'}">
-    <xacro:fanuc_mount_realsense_d435_handeye parent_link="J6_link" use_mesh="true"/>
+  <xacro:if value="${store_camera != ''}">
+    <xacro:crx_wrist_camera camera="${store_camera}" parent_link="flange" nominal="true"
+      calibration_file="${'$(arg camera_calibration)' or '$(find crx_description)/config/calibration/' + store_camera + '_handeye_default.yaml'}"/>
+  </xacro:if>
+  <xacro:if value="${gz_rgbd_camera}">
+    <xacro:fanuc_wrist_rgbd_sensors camera="${wrist_camera_selected}"/>
+    <!-- Keep the FANUC sim camera frame API (oak_rgb_camera_optical_frame) the GUI uses. -->
+    <link name="oak_rgb_camera_optical_frame"/>
+    <joint name="fanuc_sim_optical_alias" type="fixed">
+      <parent link="camera_color_optical_frame"/>
+      <child link="oak_rgb_camera_optical_frame"/>
+    </joint>
   </xacro:if>
 
   <xacro:crx_gz_control name="crx10ia" prefix=""/>

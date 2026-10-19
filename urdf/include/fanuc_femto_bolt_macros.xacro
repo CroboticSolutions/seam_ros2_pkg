@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<!--
+  FANUC CRX + Orbbec Femto Bolt (eye-in-hand on J6_link), simulation.
+
+  Frame names match orbbec_camera's femto_bolt.launch.py defaults (camera_name camera):
+    camera_base_link, camera_link, camera_color_frame, camera_color_optical_frame, ...
+  Nominal internal extrinsics (no camera driver runs in simulation).
+
+  PLACEHOLDER mount: same J6_link pose as fanuc_realsense_d435_handeye_macros.xacro
+  (the OAK mid-gun pose) until a site hand-eye exists for the Femto on the CRX.
+-->
+<robot xmlns:xacro="http://ros.org/wiki/xacro" name="fanuc_femto_bolt_attachment_defs">
+
+  <xacro:macro name="fanuc_mount_femto_bolt" params="parent_link">
+    <xacro:include filename="$(find orbbec_description)/urdf/femto_bolt.urdf.xacro"/>
+
+    <link name="fanuc_femto_bolt_mount"/>
+    <joint name="fanuc_j6_femto_bolt_mount" type="fixed">
+      <origin
+        xyz="0.300000000000 0.000000000000 0.130000000000"
+        rpy="0.000000000000 0.349065850000 0.000000000000"/>
+      <parent link="${parent_link}"/>
+      <child link="fanuc_femto_bolt_mount"/>
+    </joint>
+
+    <xacro:femto_bolt prefix="camera" parent="fanuc_femto_bolt_mount" use_nominal_extrinsics="true">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </xacro:femto_bolt>
+  </xacro:macro>
+
+</robot>

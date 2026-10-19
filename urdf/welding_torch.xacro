@@ -1,6 +1,8 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://wiki.ros.org/xacro">
-  <xacro:macro name="crx_welding_torch" params="parent prefix:=''">
+  <!-- tcp_parent/tcp_xyz/tcp_rpy: calibrated welding_tcp (crx10ia_gz: flange + store `sim`
+       origin); empty keeps the nominal Torch.stl wire tip on welding_torch. -->
+  <xacro:macro name="crx_welding_torch" params="parent prefix:='' tcp_parent:='' tcp_xyz:='' tcp_rpy:=''">
     <material name="${prefix}torch_metal">
       <color rgba="0.42 0.44 0.46 1.0"/>
     </material>
@@ -40,8 +42,14 @@
 
     <link name="${prefix}welding_tcp"/>
     <joint name="${prefix}welding_tcp_joint" type="fixed">
-      <origin xyz="0.40642358 -0.01193078 0" rpy="0 0 0"/>
-      <parent link="${prefix}welding_torch"/>
+      <xacro:if value="${tcp_parent == ''}">
+        <origin xyz="0.40642358 -0.01193078 0" rpy="0 0 0"/>
+        <parent link="${prefix}welding_torch"/>
+      </xacro:if>
+      <xacro:unless value="${tcp_parent == ''}">
+        <origin xyz="${tcp_xyz}" rpy="${tcp_rpy}"/>
+        <parent link="${tcp_parent}"/>
+      </xacro:unless>
       <child link="${prefix}welding_tcp"/>
     </joint>
 
